@@ -1,22 +1,23 @@
 import mediapipe as mp
 import numpy as np
-from time import sleep, time
 import cv2
 
+from time import sleep, time
+from playsound import playsound
+
 _cap = cv2.VideoCapture(0)
-excersise_list = ["Приседания", "Отжимания", "Планка"]
-user_type = {}
+user_type = {} # @TODO Определение типа пользователя, а также последующая рекомендация количества упражнений
 
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
 
 class Manage:
-    def coords_difference(p1: list[float, float], p2: list[float, float]) -> float:
+    def y_coords_difference(p1: list[float, float], p2: list[float, float]) -> float:
         y1 = p1[1]
         y2 = p2[1]
 
-        return y2 - y1
+        return abs(y2 - y1)
     
 
     def calc_angle(p1: list[float, float], p2: list[float, float], p3: list[float, float]) -> float:
@@ -31,11 +32,7 @@ class Manage:
 
 
 class Training:
-    def __init__():
-        pass
-
-
-    def squats():
+    def squats() -> None:
         state = "up"
         counter = 0
         with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
@@ -57,12 +54,17 @@ class Training:
                     
                     l_knee_z = landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].z
                     r_knee_z = landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].z
+                    
+                    # If camera's facing the right users' side
                     if r_knee_z < l_knee_z:
-                        side = True
+                        r_hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
+                        r_knee = [landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y]
+                        r_ankle = [landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].y]
+                        l_ankle = [landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y]
+                        
+                        angle = Manage.calc_angle(r_hip, r_knee, r_ankle)
+                    
                     else:
-                        side = False
-
-                    if not side:
                         l_hip = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
                         l_knee = [landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].y]
                         l_ankle = [landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y]
@@ -70,24 +72,14 @@ class Training:
                         
                         angle = Manage.calc_angle(l_hip, l_knee, l_ankle)
 
-                    else:
-                        r_hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
-                        r_knee = [landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y]
-                        r_ankle = [landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].y]
-                        l_ankle = [landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y]
-                        
-                        angle = Manage.calc_angle(r_hip, r_knee, r_ankle)
-
-                    print(abs(r_ankle[1] - l_ankle[1]))
-                    if angle <= 90 and state == "up" and (abs(r_ankle[1] - l_ankle[1]) < 0.07):
+                    if angle <= 90 and state == "up" and Manage.y_coords_difference(r_ankle, l_ankle) < 0.07:
                         state = "down"
                         counter += 1
-                    elif angle > 165 and state == "down" and (abs(r_ankle[1] - l_ankle[1]) < 0.07):
+                    elif angle > 165 and state == "down" and Manage.y_coords_difference(r_ankle, l_ankle) < 0.07:
                         state = "up"
 
                     cv2.putText(img, str(counter) + ' ' + str(angle), [640, 512], cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
                     
-
                 except:
                     pass
 
@@ -100,13 +92,11 @@ class Training:
                 if cv2.waitKey(10) & 0xFF == ord('q'):
                     break
 
-            print("Количество приседаний:", counter)
-
             _cap.release()
             cv2.destroyAllWindows()
 
 
-    def pushups():
+    def pushups() -> None:
         state = "up"
         counter = 0
         with mp_pose.Pose(min_detection_confidence=0.757, min_tracking_confidence=0.5) as pose:
@@ -128,22 +118,9 @@ class Training:
 
                     l_shoulder_z = landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].z
                     r_shoulder_z = landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].z
+
+                    # If camera's facing the right users' side
                     if r_shoulder_z < l_shoulder_z:
-                        side = True
-                    else:
-                        side = False
-
-                    if not side:
-                        l_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
-                        l_elbow = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
-                        l_wrist = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x, landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
-                        l_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
-                        l_ankle = [landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y]
-                        
-                        angle = Manage.calc_angle(l_shoulder, l_elbow, l_wrist)
-                        shoulder_ankle_difference = abs(l_shoulder[1] - l_ankle[1])
-
-                    else:
                         r_shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
                         r_elbow = [landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].y]
                         r_wrist = [landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].y]
@@ -151,17 +128,25 @@ class Training:
                         r_ankle = [landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].y]
                         
                         angle = Manage.calc_angle(r_shoulder, r_elbow, r_wrist)
-                        shoulder_ankle_difference = abs(r_shoulder[1] - r_ankle[1])
-                    
+                        shoulder_ankle_difference = Manage.y_coords_difference(r_shoulder, r_ankle)
+
+                    else:
+                        l_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
+                        l_elbow = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
+                        l_wrist = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x, landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
+                        l_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
+                        l_ankle = [landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y]
+                        
+                        angle = Manage.calc_angle(l_shoulder, l_elbow, l_wrist)
+                        shoulder_ankle_difference = Manage.y_coords_difference(l_shoulder, l_ankle)
+
+                    # Angle logic
                     angle %= 180
-                    print("angle:", angle)
                     if angle >= 90 and state == "up" and shoulder_ankle_difference < 0.5:
                         state = "down"
                         counter += 1
                     elif angle < 20 and state == "down":
                         state = "up"
-
-                    cv2.putText(img, str(counter) + '  ' + str(shoulder_ankle_difference), [640, 512], cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
 
                 except:
                     pass
@@ -179,7 +164,7 @@ class Training:
             cv2.destroyAllWindows()
 
 
-    def plank():
+    def plank() -> None:
         with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
             start_time = 0
             timeStarted = False
@@ -203,26 +188,23 @@ class Training:
                     
                     l_shoulder_z = landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].z
                     r_shoulder_z = landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].z
+                    
+                    # If camera's facing the right users' side
                     if r_shoulder_z < l_shoulder_z:
-                        side = True
-                    else:
-                        side = False
-
-                    if not side:
-                        l_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
-                        l_hip = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
-                        l_ankle = [landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y]
-                        
-                        angle = Manage.calc_angle(l_shoulder, l_hip, l_ankle)
-                        shoulder_ankle_difference = abs(l_shoulder[1] - l_ankle[1])
-
-                    else:
                         r_shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
                         r_hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
                         r_ankle = [landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].y]
                         
                         angle = Manage.calc_angle(r_shoulder, r_hip, r_ankle)
-                        shoulder_ankle_difference = abs(r_shoulder[1] - r_ankle[1])
+                        shoulder_ankle_difference = Manage.y_coords_difference(r_shoulder, r_ankle)
+
+                    else:
+                        l_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
+                        l_hip = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
+                        l_ankle = [landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y]
+                        
+                        angle = Manage.calc_angle(l_shoulder, l_hip, l_ankle)
+                        shoulder_ankle_difference = Manage.y_coords_difference(l_shoulder, l_ankle)
 
                     next_time = time()
                     if not (170 <= angle <= 190 and shoulder_ankle_difference < 0.4):
@@ -236,7 +218,7 @@ class Training:
                                 cv2.putText(img, str(angle), 
                                     tuple(np.multiply(r_hip, [1280, 1024]).astype(int)),
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-                            if time_after_stop >= 2:
+                            if time_after_stop >= 5:
                                 break
                             
                     else:
@@ -263,21 +245,3 @@ class Training:
 
             _cap.release()
             cv2.destroyAllWindows()
-
-
-# def train(cap: cv2.VideoCapture) -> None:
-#     _cap = cap
-
-#     excersise_plan = """
-#     Короче сейчас будут упражнения в следующем порядке:
-#         Приседания
-#         Отжимания
-#         Планка
-        
-#         На каждое упражнение отводится минута, GL"""
-    
-#     print(excersise_plan)
-    
-#     # for excersise in excersise_list:
-        
-#     Training.plan

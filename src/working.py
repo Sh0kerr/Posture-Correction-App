@@ -2,6 +2,8 @@ import mediapipe as mp
 import numpy as np
 import cv2
 
+from playsound import playsound
+
 cap = cv2.VideoCapture(0)
 side: bool
 
@@ -48,35 +50,6 @@ def work() -> None:
                 l_shoulder_z = landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].z
                 r_shoulder_z = landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].z
                 if r_shoulder_z < l_shoulder_z:
-                    side = True
-                else:
-                    side = False
-
-                if not side:
-                    l_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
-                    l_hip = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
-                    l_knee = [landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].y]
-                    l_ankle = [landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y]
-
-                    angle_23 = Manage.calc_angle(l_shoulder, l_hip, l_knee)
-                    if not(80 <= angle_23 <= 100):
-                        cv2.putText(img, str(angle_23), 
-                                tuple(np.multiply(l_hip, [1280, 1024]).astype(int)),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-                    
-                    angle_25 = Manage.calc_angle(l_hip, l_knee, l_ankle)
-                    if not(80 <= angle_25 <= 100):
-                        cv2.putText(img, str(angle_25), 
-                                    tuple(np.multiply(l_knee, [1280, 1024]).astype(int)),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-                        
-                    line_11_23 = Manage.is_back_straight(l_shoulder, l_hip)
-                    if not(line_11_23):
-                        cv2.putText(img, "Left", 
-                                tuple(np.multiply(l_shoulder, [1280, 1024]).astype(int)),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-
-                if side:
                     r_shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
                     r_hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
                     r_knee = [landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y]
@@ -84,21 +57,33 @@ def work() -> None:
                     
                     angle_24 = Manage.calc_angle(r_shoulder, r_hip, r_knee)
                     if not(80 <= angle_24 <= 100):
-                        cv2.putText(img, str(angle_24), 
-                                tuple(np.multiply(r_hip, [1280, 1024]).astype(int)),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+                        playsound("./sound/lean.mp3")
                     
                     angle_26 = Manage.calc_angle(r_hip, r_knee, r_ankle)
                     if not(80 <= angle_26 <= 100):
-                        cv2.putText(img, str(angle_26), 
-                                    tuple(np.multiply(r_knee, [1280, 1024]).astype(int)),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+                        playsound("./sound/knee_angle.mp3")
                     
                     line_12_24 = Manage.is_back_straight(r_shoulder, r_hip) 
                     if not (line_12_24):
-                        cv2.putText(img, "Right", 
-                                tuple(np.multiply(r_shoulder, [1280, 1024]).astype(int)),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+                        playsound("./sound/back_crooked.mp3")
+
+                else:
+                    l_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
+                    l_hip = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
+                    l_knee = [landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].y]
+                    l_ankle = [landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y]
+
+                    angle_23 = Manage.calc_angle(l_shoulder, l_hip, l_knee)
+                    if not(80 <= angle_23 <= 100):
+                        playsound("./sound/lean.mp3")
+                    
+                    angle_25 = Manage.calc_angle(l_hip, l_knee, l_ankle)
+                    if not(80 <= angle_25 <= 100):
+                        playsound("./sound/knee_angle.mp3")
+                        
+                    line_11_23 = Manage.is_back_straight(l_shoulder, l_hip)
+                    if not(line_11_23):
+                        playsound("./sound/back_crooked.mp3")
 
             except:
                 pass
