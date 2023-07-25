@@ -1,5 +1,3 @@
-from training import Training
-from working import work
 from gui import WindowsHandler, getAge
 import os
 
