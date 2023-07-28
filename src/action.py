@@ -114,7 +114,7 @@ class Action:
 
                     # Angle logic
                     angle %= 180
-                    if angle >= 90 and state == "up" and shoulder_ankle_difference < 0.5:
+                    if angle >= 75 and state == "up" and shoulder_ankle_difference < 0.5:
                         state = "down"
                         self.reps += 1
                         print("Ты сделал отжимание!!!")
@@ -189,6 +189,7 @@ class Action:
                     if angle <= 90 and state == "up" and Manage.y_coords_difference(r_ankle, l_ankle) < 0.07:
                         state = "down"
                         self.reps += 1
+                        print(f"squat {self.reps}")
                     elif angle > 190 and state == "down" and Manage.y_coords_difference(r_ankle, l_ankle) < 0.07:
                         state = "up"
 

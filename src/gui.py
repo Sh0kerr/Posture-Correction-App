@@ -14,13 +14,15 @@ button_padx, button_pady = 20, 20
 systemTextColor = "white"
 orange = "#cc6600"
 blue = "#1f6aa5"
-system_cornerRadius = 10
+system_cornerRadius = 20
+
 
 class Category(Enum):
     BOY = 0,
     GIRL = 1,
     MAN = 2,
     WOMAN = 3
+
 
 reps_category = {
     Category.BOY: [10, 10, 30],
@@ -163,7 +165,7 @@ class WindowsHandler(ctk.CTk):
     def window_posture(self):
         self.title("Осанка")
         self.action = Action()
-        self.t = Thread(target=self.action.posture)
+        self.t = Thread(target=self.action.posture, daemon=True)
         self.t.start()
 
         phrase = ctk.CTkLabel(self, text="Держите ровно осанку!", font=systemFont_heading)
@@ -238,10 +240,10 @@ class WindowsHandler(ctk.CTk):
         self.rep_counter = 0
         self.action = Action()
 
-        self.t = Thread(target=self.action.pushups)
+        self.t = Thread(target=self.action.pushups, daemon=True)
         self.t.start()
 
-        self.tr = Thread(target=self.checkReps)
+        self.tr = Thread(target=self.checkReps, args=(reps_category[self.category][0],), daemon=True)
         self.tr.start()
 
         self.frame = ctk.CTkFrame(self, fg_color=blue)
@@ -281,10 +283,10 @@ class WindowsHandler(ctk.CTk):
         self.rep_counter = 0
         self.action = Action()
 
-        self.t = Thread(target=self.action.squats)
+        self.t = Thread(target=self.action.squats, daemon=True)
         self.t.start()
 
-        self.tr = Thread(target=self.checkReps)
+        self.tr = Thread(target=self.checkReps, args=(reps_category[self.category][0],), daemon=True)
         self.tr.start()
 
         self.frame = ctk.CTkFrame(self, fg_color=blue)
@@ -302,7 +304,7 @@ class WindowsHandler(ctk.CTk):
         self.lReps.pack(pady=20)
 
         bSwitch_toPushups = ctk.CTkButton(self.frame, text="Переключиться на отжимания", font=systemFont, text_color=systemTextColor, fg_color=orange,
-                                          command=self.button_switchToSquats, width=100, height=100)
+                                          command=self.button_switchToPushups, width=100, height=100)
         bSwitch_toPushups.grid(row=0, column=0, pady=(20, 10), padx=(20, 0))
 
         bSwitch_toPlank = ctk.CTkButton(self.frame, text="Переключиться на планку", font=systemFont,
@@ -326,10 +328,10 @@ class WindowsHandler(ctk.CTk):
         self.rep_counter = 0
         self.action = Action()
 
-        self.t = Thread(target=self.action.plank)
+        self.t = Thread(target=self.action.plank, daemon=True)
         self.t.start()
 
-        self.tr = Thread(target=self.checkReps)
+        self.tr = Thread(target=self.checkReps, args=(reps_category[self.category][0],), daemon=True)
         self.tr.start()
 
         self.frame = ctk.CTkFrame(self, fg_color=blue)
@@ -350,12 +352,12 @@ class WindowsHandler(ctk.CTk):
 
         bSwitch_toPushups = ctk.CTkButton(self.frame, text="Переключиться на отжимания", font=systemFont,
                                           text_color=systemTextColor, fg_color=orange,
-                                          command=self.button_switchToSquats, width=100, height=100)
+                                          command=self.button_switchToPushups, width=100, height=100)
         bSwitch_toPushups.grid(row=0, column=0, pady=(20, 10), padx=(20, 0))
 
         bSwitch_toSquats = ctk.CTkButton(self.frame, text="Переключиться на приседания", font=systemFont,
                                          text_color=systemTextColor, fg_color=orange,
-                                         command=self.button_switchToPlank, width=286, height=100)
+                                         command=self.button_switchToSquats, width=286, height=100)
         bSwitch_toSquats.grid(row=1, column=0, pady=(10, 10), padx=(20, 0))
 
         bModes = ctk.CTkButton(self.frame, text="В главное меню", font=systemFont, text_color=systemTextColor,
@@ -369,14 +371,14 @@ class WindowsHandler(ctk.CTk):
 
         self.mainloop()
 
-    def checkReps(self):
+    def checkReps(self, overall):
         while True:
             if self.tr_exitFlag:
                 break
             reps = self.action.get_reps()
             if reps != self.rep_counter:
                 self.rep_counter = reps
-                self.lReps.configure(text=str(self.action.get_reps()))
+                self.lReps.configure(text=f"{self.action.get_reps()} / {overall}")
             sleep(0.1)
 
     def button_toModes(self, killT=True, killTr=True):
@@ -473,12 +475,7 @@ class WindowsHandler(ctk.CTk):
 
     def destroy_current_content(self):
         for item in self.destroy_list:
-            print(str(type(item)) + "... ", end='')
-            try:
-                item.destroy()
-                print("successfully destroyed")
-            except:
-                print("shit")
+            item.destroy()
         self.destroy_list.clear()
 
 
